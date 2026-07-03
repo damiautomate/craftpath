@@ -1,0 +1,26 @@
+{
+  "name": "craftpath",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Craftpath — a content-as-data learning platform. Upload markdown lessons; students learn.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "14.2.5",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "@supabase/supabase-js": "2.45.0",
+    "@supabase/ssr": "0.5.1",
+    "gray-matter": "4.0.3",
+    "js-yaml": "4.1.0",
+    "lucide-react": "0.427.0"
+  },
+  "devDependencies": {
+    "eslint": "8.57.0",
+    "eslint-config-next": "14.2.5"
+  }
+}
