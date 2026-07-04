@@ -121,3 +121,7 @@ node scripts/import-content.mjs ../learning-platform-content
 ```
 
 This imports every lesson, the glossary, and each skill manifest. Then publish the skill (admin → Skills → Publish, or `update skills set published = true;`).
+
+### One-drop bulk upload (no terminal)
+
+In `/admin → Import`, the top card lets you upload a single **.zip** of the content bundle. It unpacks it and imports every lesson, the glossary, and the skill manifest to the right place automatically (lessons first, manifest last). Then publish the skill under **Skills**.

@@ -101,15 +101,15 @@ create table if not exists deliverables (
 
 -- Is the current user an admin? SECURITY DEFINER bypasses RLS (avoids recursion).
 create or replace function is_admin() returns boolean
-  language sql security definer stable as $$
-  select coalesce((select is_admin from profiles where id = auth.uid()), false);
+  language sql security definer stable set search_path = '' as $$
+  select coalesce((select is_admin from public.profiles where id = auth.uid()), false);
 $$;
 
 -- Auto-create a profile row when a user signs up.
 create or replace function handle_new_user() returns trigger
-  language plpgsql security definer as $$
+  language plpgsql security definer set search_path = '' as $$
 begin
-  insert into profiles (id, display_name)
+  insert into public.profiles (id, display_name)
   values (new.id, coalesce(new.raw_user_meta_data->>'display_name', split_part(new.email, '@', 1)));
   return new;
 end; $$;
