@@ -10,3 +10,5 @@ export default async function EditLesson({ params }) {
   if (!lesson) return <div className="adm-pad"><h1 className="adm-h1">Not found</h1><p className="adm-sub">No lesson with code {code}.</p></div>;
   return <LessonEditor lesson={lesson} glossary={glossary} />;
 }
+
+export const dynamic = 'force-dynamic';
