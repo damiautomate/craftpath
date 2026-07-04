@@ -19,5 +19,3 @@ export default async function GlossaryList() {
     </div>
   );
 }
-
-export const dynamic = 'force-dynamic';

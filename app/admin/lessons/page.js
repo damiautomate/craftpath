@@ -22,5 +22,3 @@ export default async function LessonsList() {
     </div>
   );
 }
-
-export const dynamic = 'force-dynamic';

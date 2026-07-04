@@ -29,5 +29,3 @@ export default async function SkillJourney({ params }) {
     />
   );
 }
-
-export const dynamic = 'force-dynamic';

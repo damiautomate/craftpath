@@ -27,5 +27,3 @@ export default async function LearnHome() {
     </div>
   );
 }
-
-export const dynamic = 'force-dynamic';

@@ -21,5 +21,3 @@ export default async function SkillsList() {
     </div>
   );
 }
-
-export const dynamic = 'force-dynamic';

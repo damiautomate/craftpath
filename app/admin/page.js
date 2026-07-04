@@ -31,5 +31,3 @@ export default async function AdminHome() {
     </div>
   );
 }
-
-export const dynamic = 'force-dynamic';
