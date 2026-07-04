@@ -12,7 +12,8 @@ export default function ImportPage() {
     try {
       const items = await Promise.all([...files].map(async (f) => ({ name: f.name, content: await f.text() })));
       const r = await fetch('/api/admin/import/lessons', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items }) });
-      setRes((s) => ({ ...s, lessons: await r.json() }));
+      const data = await r.json();
+      setRes((s) => ({ ...s, lessons: data }));
     } catch (e) { setRes((s) => ({ ...s, lessons: { error: e.message } })); }
     setBusy(null);
   }
@@ -22,7 +23,8 @@ export default function ImportPage() {
     try {
       const content = await file.text();
       const r = await fetch('/api/admin/import/' + kind, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content }) });
-      setRes((s) => ({ ...s, [kind]: await r.json() }));
+      const data = await r.json();
+      setRes((s) => ({ ...s, [kind]: data }));
     } catch (e) { setRes((s) => ({ ...s, [kind]: { error: e.message } })); }
     setBusy(null);
   }

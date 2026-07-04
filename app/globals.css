@@ -244,3 +244,6 @@ a { color:inherit; text-decoration:none; }
 .lp-statcard .l{ font-size:12px; color:var(--ink-soft); margin-top:2px; }
 .lp-center{ display:grid; place-items:center; padding:60px 20px; color:var(--ink-faint); }
 @media (min-width:720px){ .lp-nav{ position:sticky; bottom:16px; margin:0 auto; max-width:420px; border-radius:18px; border:1px solid var(--line); box-shadow:var(--shadow-lg); } .lp-h1{ font-size:34px; } }
+
+/* font families (loaded via <link> in layout, so the build never fetches fonts) */
+:root { --font-display: 'Fraunces', Georgia, serif; --font-body: 'Hanken Grotesk', system-ui, -apple-system, sans-serif; }
