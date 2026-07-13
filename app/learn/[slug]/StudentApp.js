@@ -6,7 +6,8 @@ import { setProgress, saveDeliverable } from '@/lib/content';
 import { Markdown, GlossarySheet } from '@/components/Markdown';
 import {
   Flame, BookOpen, CheckCircle2, Lock, Moon, Sun, Compass, ArrowRight, ChevronRight,
-  Target, Trophy, PenLine, GraduationCap, Wrench, Briefcase, Sparkles, User, LogOut, Loader2, Settings
+  Target, Trophy, PenLine, GraduationCap, Wrench, Briefcase, Sparkles, User, LogOut, Loader2, Settings,
+  Play, ExternalLink
 } from 'lucide-react';
 
 const layerIcon = (l, s = 16) =>
@@ -97,8 +98,65 @@ function Journey({ skill, phases, completed, unlocked, phaseDone, next, onOpen, 
   );
 }
 
+/* ---------------- Branch companion (platform execution) ---------------- */
+function BranchCompanion({ branch, glossary, onTerm, isDone, onToggle, work, onWork, onWorkSave }) {
+  if (!branch) return null;
+  const label = branch.platform_label || 'the tool';
+  const hasVideo = branch.video_provider === 'youtube' && branch.video_id;
+  const embedUrl = hasVideo ? `https://www.youtube.com/embed/${branch.video_id}` : null;
+  const watchUrl = hasVideo ? `https://www.youtube.com/watch?v=${branch.video_id}` : null;
+  return (
+    <div className="lp-branch">
+      <div className="lp-branch-head">
+        <Play size={17} />
+        <span className="t">Now build it in {label}</span>
+        <span className="lp-tag branch" style={{ marginLeft: 'auto' }}>Build</span>
+      </div>
+
+      {embedUrl ? (
+        <div className="cp-video">
+          <iframe
+            src={embedUrl}
+            title={branch.title || ('Build it in ' + label)}
+            loading="lazy"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+            referrerPolicy="strict-origin-when-cross-origin"
+          />
+        </div>
+      ) : (
+        <div className="lp-note">A walkthrough video is coming soon for this step.</div>
+      )}
+
+      <div className="lp-branch-body">
+        {branch.body_md ? <Markdown text={branch.body_md} glossary={glossary} onTerm={onTerm} /> : null}
+
+        {watchUrl && (
+          <a className="lp-branch-fallback" href={watchUrl} target="_blank" rel="noreferrer">
+            <ExternalLink size={14} /> Trouble loading the video? Open it on YouTube
+          </a>
+        )}
+
+        {branch.deliverable && (
+          <div className="lp-cap" style={{ marginTop: 16 }}>
+            <div className="ct"><PenLine size={18} color="var(--branch)" /> Prove you built it</div>
+            <div className="cd">{branch.deliverable}</div>
+            <textarea placeholder="Paste a link or screenshot URL of what you built…" value={work || ''} onChange={(e) => onWork(e.target.value)} onBlur={onWorkSave} />
+            {work && work.trim() && <div className="saved"><CheckCircle2 size={14} /> Saved to your work</div>}
+          </div>
+        )}
+
+        <button className={'lp-btn branch' + (isDone ? ' done' : '')} onClick={onToggle} style={{ marginTop: 14 }}>
+          {isDone ? <><CheckCircle2 size={18} /> Built — tap to undo</> : <>Mark built <ArrowRight size={18} /></>}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 /* ---------------- Lesson ---------------- */
-function Lesson({ mod, phaseN, bodyData, loading, glossary, onTerm, onBack, isDone, onToggle, work, onWork, onWorkSave }) {
+function Lesson({ mod, phaseN, bodyData, loading, glossary, onTerm, onBack, isDone, onToggle, work, onWork, onWorkSave,
+  branch, branchDone, onBranchToggle, branchWork, onBranchWork, onBranchWorkSave }) {
   const body = bodyData?.body_md;
   const deliverable = bodyData?.deliverable || mod.deliverable;
   return (
@@ -132,13 +190,26 @@ function Lesson({ mod, phaseN, bodyData, loading, glossary, onTerm, onBack, isDo
       <button className={'lp-btn' + (isDone ? ' done' : '')} onClick={onToggle} style={{ marginTop: 14 }}>
         {isDone ? <><CheckCircle2 size={18} /> Completed — tap to undo</> : <>Mark lesson complete <ArrowRight size={18} /></>}
       </button>
+
+      {branch && (
+        <BranchCompanion
+          branch={branch}
+          glossary={glossary}
+          onTerm={onTerm}
+          isDone={branchDone}
+          onToggle={onBranchToggle}
+          work={branchWork}
+          onWork={onBranchWork}
+          onWorkSave={onBranchWorkSave}
+        />
+      )}
     </div>
   );
 }
 
 /* ---------------- Work ---------------- */
-function Work({ flat, work, onOpen }) {
-  const entries = flat.filter((m) => work[m.code] && work[m.code].trim());
+function Work({ items, work, onOpen }) {
+  const entries = items.filter((m) => work[m.code] && work[m.code].trim());
   return (
     <div className="lp-screen">
       <div className="lp-eyebrow">Portfolio</div>
@@ -148,9 +219,12 @@ function Work({ flat, work, onOpen }) {
         {entries.length === 0 ? (
           <div className="lp-empty"><BookOpen size={30} style={{ opacity: .4 }} /><p style={{ marginTop: 10 }}>Nothing captured yet.<br />Do a lesson&apos;s deliverable and it appears here.</p></div>
         ) : entries.map((m) => (
-          <div key={m.code} className="lp-wcard" onClick={() => onOpen(m.code)} style={{ cursor: 'pointer' }}>
+          <div key={m.code} className="lp-wcard" onClick={() => onOpen(m.openCode || m.code)} style={{ cursor: 'pointer' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              {m.layer && <span className={'lp-tag ' + m.layer}>{m.layer}</span>}<span className="wt">{m.title}</span>
+              {m.isBranch
+                ? <span className="lp-tag branch">{m.platform_label || 'Build'}</span>
+                : (m.layer && <span className={'lp-tag ' + m.layer}>{m.layer}</span>)}
+              <span className="wt">{m.title}</span>
             </div>
             <div className="wtext">{work[m.code].length > 220 ? work[m.code].slice(0, 220) + '…' : work[m.code]}</div>
           </div>
@@ -185,7 +259,7 @@ function You({ name, doneCount, total, streak, gatesMet, phasesCount, isAdmin, o
 }
 
 /* ---------------- App ---------------- */
-export default function StudentApp({ userId, name, isAdmin, skill, phases, glossary, initialCompleted, initialWork }) {
+export default function StudentApp({ userId, name, isAdmin, skill, phases, glossary, branches, initialCompleted, initialWork }) {
   const router = useRouter();
   const sb = useMemo(() => createClient(), []);
   const [view, setView] = useState('journey');
@@ -198,9 +272,25 @@ export default function StudentApp({ userId, name, isAdmin, skill, phases, gloss
   const [sheet, setSheet] = useState(null);
   const [streak, setStreak] = useState(1);
 
+  const allBranches = useMemo(() => branches || [], [branches]);
+  const branchByTrunk = useMemo(() => {
+    const m = {};
+    for (const b of allBranches) if (b.pairs_with) m[b.pairs_with] = b;
+    return m;
+  }, [allBranches]);
+
   const flat = useMemo(() => phases.flatMap((p) => p.modules.map((m) => ({ ...m, phaseN: p.number }))), [phases]);
   const total = flat.length;
   const doneCount = completed.size;
+
+  // Portfolio items = journey lessons + branch companions (branches aren't in the
+  // journey, but their captured work is real portfolio proof). A branch card opens
+  // its paired trunk lesson, where the companion lives.
+  const workItems = useMemo(() => [
+    ...flat,
+    ...allBranches.map((b) => ({ code: b.code, title: b.title, isBranch: true, platform_label: b.platform_label, openCode: b.pairs_with })),
+  ], [flat, allBranches]);
+
   const phaseDone = (pi) => phases[pi].modules.length > 0 && phases[pi].modules.every((m) => completed.has(m.code));
   const unlocked = (pi) => pi === 0 || phaseDone(pi - 1);
   const gatesMet = phases.filter((p, pi) => phaseDone(pi)).length;
@@ -209,6 +299,7 @@ export default function StudentApp({ userId, name, isAdmin, skill, phases, gloss
     return null;
   }, [completed, phases]);
   const cur = code ? flat.find((m) => m.code === code) : null;
+  const curBranch = cur ? branchByTrunk[cur.code] : null;
 
   // theme (persisted per device) + streak
   useEffect(() => {
@@ -264,8 +355,15 @@ export default function StudentApp({ userId, name, isAdmin, skill, phases, gloss
         </div>
 
         {view === 'journey' && <Journey skill={skill} phases={phases} completed={completed} unlocked={unlocked} phaseDone={phaseDone} next={next} onOpen={open} onContinue={() => next && open(next.code)} streak={streak} doneCount={doneCount} total={total} />}
-        {view === 'lesson' && cur && <Lesson mod={cur} phaseN={cur.phaseN} bodyData={bodies[cur.code]} loading={loadingBody} glossary={glossary} onTerm={setSheet} onBack={() => setView('journey')} isDone={completed.has(cur.code)} onToggle={() => toggleComplete(cur.code)} work={work[cur.code]} onWork={(v) => updateWork(cur.code, v)} onWorkSave={() => persistWork(cur.code)} />}
-        {view === 'work' && <Work flat={flat} work={work} onOpen={open} />}
+        {view === 'lesson' && cur && <Lesson mod={cur} phaseN={cur.phaseN} bodyData={bodies[cur.code]} loading={loadingBody} glossary={glossary} onTerm={setSheet} onBack={() => setView('journey')} isDone={completed.has(cur.code)} onToggle={() => toggleComplete(cur.code)} work={work[cur.code]} onWork={(v) => updateWork(cur.code, v)} onWorkSave={() => persistWork(cur.code)}
+          branch={curBranch}
+          branchDone={curBranch ? completed.has(curBranch.code) : false}
+          onBranchToggle={() => curBranch && toggleComplete(curBranch.code)}
+          branchWork={curBranch ? work[curBranch.code] : ''}
+          onBranchWork={(v) => curBranch && updateWork(curBranch.code, v)}
+          onBranchWorkSave={() => curBranch && persistWork(curBranch.code)}
+        />}
+        {view === 'work' && <Work items={workItems} work={work} onOpen={open} />}
         {view === 'you' && <You name={name} doneCount={doneCount} total={total} streak={streak} gatesMet={gatesMet} phasesCount={phases.length} isAdmin={isAdmin} onSignOut={signOut} />}
       </div>
 
