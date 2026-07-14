@@ -5,7 +5,6 @@ import { X, BookOpen } from 'lucide-react';
 const MODE_EMOJI = ['🎬', '🪞', '✅', '🚀', '✍️', '📚', '📌', '🎯'];
 const isMode = (t) => MODE_EMOJI.some((e) => t.startsWith(e));
 
-// Extract a YouTube id from a URL or accept a bare id.
 const ytId = (s) => {
   const str = String(s || '');
   const m = str.match(/(?:youtu\.be\/|[?&]v=|embed\/|shorts\/)([A-Za-z0-9_-]{6,})/);
@@ -13,18 +12,23 @@ const ytId = (s) => {
   return /^[A-Za-z0-9_-]{6,}$/.test(str) ? str : null;
 };
 
-// Turn a single line into a video/placeholder block if it qualifies. Authors write videos
-// by dropping a YouTube link (or `@video <id|url>`) on its own line — often inside the
-// "Watch" bullet. Leftover `[Placeholder …]` notes render as a tasteful "coming soon" card.
+// pipe-table helpers
+const splitRow = (l) => l.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map((c) => c.trim());
+const isSepRow = (l) => {
+  if (!l || l.indexOf('|') === -1) return false;
+  const cells = splitRow(l);
+  return cells.length > 0 && cells.every((c) => /^:?-{1,}:?$/.test(c));
+};
+
 function videoBlockFor(line) {
   if (/\[placeholder/i.test(line)) {
     const q = line.match(/"([^"]+)"|[\u201C]([^\u201D]+)[\u201D]/);
     return { t: 'videosoon', title: (q && (q[1] || q[2])) || null };
   }
   const s0 = line
-    .replace(/^\s*[-*]\s+/, '')                          // list bullet
-    .replace(/^[\u25B6\u25BA\u25B7\uFE0F\u2018\u2019\s►▶️🎬📺]+/gu, '') // leading play glyphs
-    .replace(/^watch[:\-\s]*/i, '')                       // a "Watch:" label
+    .replace(/^\s*[-*]\s+/, '')
+    .replace(/^[\u25B6\u25BA\u25B7\uFE0F\u2018\u2019\s►▶️🎬📺]+/gu, '')
+    .replace(/^watch[:\-\s]*/i, '')
     .trim();
   const mark = s0.match(/^@video\s+(\S+)$/i);
   const linkOnly = s0.match(/^(?:\[[^\]]*\]\()?\s*(https?:\/\/[^\s)]+)\)?$/);
@@ -46,6 +50,12 @@ function parseBlocks(md) {
     if (line.startsWith('## ')) { blocks.push({ t: 'h2', x: line.slice(3) }); i++; continue; }
     if (line.startsWith('# ')) { blocks.push({ t: 'h1', x: line.slice(2) }); i++; continue; }
     if (/^---+$/.test(line.trim())) { blocks.push({ t: 'hr' }); i++; continue; }
+    // pipe table: a row starting with | followed by a |---|---| separator
+    if (line.trim().startsWith('|') && i + 1 < lines.length && isSepRow(lines[i + 1])) {
+      const head = splitRow(line); const body = []; let j = i + 2;
+      while (j < lines.length && lines[j].trim().startsWith('|') && !isSepRow(lines[j])) { body.push(splitRow(lines[j])); j++; }
+      blocks.push({ t: 'table', head, body }); i = j; continue;
+    }
     if (line.startsWith('>')) {
       const q = []; while (i < lines.length && lines[i].startsWith('>')) { q.push(lines[i].replace(/^>\s?/, '')); i++; }
       blocks.push({ t: 'quote', items: q.filter((s) => s.trim()) }); continue;
@@ -59,7 +69,7 @@ function parseBlocks(md) {
       blocks.push({ t: 'ol', items }); continue;
     }
     const para = [line]; i++;
-    while (i < lines.length && !/^\s*$/.test(lines[i]) && !/^(#|>|\s*-\s|\s*\d+\.\s|---)/.test(lines[i])) { para.push(lines[i]); i++; }
+    while (i < lines.length && !/^\s*$/.test(lines[i]) && !/^\s*\|/.test(lines[i]) && !/^(#|>|\s*-\s|\s*\d+\.\s|---)/.test(lines[i])) { para.push(lines[i]); i++; }
     blocks.push({ t: 'p', x: para.join(' ') });
   }
   return blocks;
@@ -67,9 +77,16 @@ function parseBlocks(md) {
 
 function inline(text, ctx, kp) {
   const nodes = [];
-  const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g);
+  const parts = String(text).split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`|\[[^\]]+\]\([^)]+\))/g);
   parts.forEach((part, i) => {
     if (!part) return;
+    if (/^`[^`]+`$/.test(part)) { nodes.push(<code key={kp + 'c' + i}>{part.slice(1, -1)}</code>); return; }
+    const lm = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+    if (lm) {
+      const external = /^https?:\/\//.test(lm[2]);
+      nodes.push(<a key={kp + 'a' + i} className="lp-link" href={lm[2]} {...(external ? { target: '_blank', rel: 'noreferrer' } : {})}>{lm[1]}</a>);
+      return;
+    }
     if (/^\*\*[\s\S]+\*\*$/.test(part)) { nodes.push(<strong key={kp + 'b' + i}>{part.slice(2, -2)}</strong>); return; }
     if (/^\*[\s\S]+\*$/.test(part)) { nodes.push(<em key={kp + 'i' + i}>{part.slice(1, -1)}</em>); return; }
     if (!ctx.g) { nodes.push(part); return; }
@@ -116,6 +133,14 @@ function block(b, i, ctx) {
     <div key={i} className="lp-md-soon">
       <span className="ic">🎬</span>
       <span>Walkthrough video coming soon{b.title ? <> — <em>“{b.title}”</em></> : null}</span>
+    </div>
+  );
+  if (b.t === 'table') return (
+    <div key={i} className="lp-md-tablewrap">
+      <table>
+        <thead><tr>{b.head.map((c, j) => <th key={j}>{inline(c, ctx, kp + 'h' + j)}</th>)}</tr></thead>
+        <tbody>{b.body.map((row, r) => <tr key={r}>{b.head.map((_, j) => <td key={j}>{inline(row[j] || '', ctx, kp + r + '-' + j)}</td>)}</tr>)}</tbody>
+      </table>
     </div>
   );
   if (b.t === 'p') return <p key={i}>{inline(b.x, ctx, kp)}</p>;
