@@ -5,12 +5,43 @@ import { X, BookOpen } from 'lucide-react';
 const MODE_EMOJI = ['🎬', '🪞', '✅', '🚀', '✍️', '📚', '📌', '🎯'];
 const isMode = (t) => MODE_EMOJI.some((e) => t.startsWith(e));
 
+// Extract a YouTube id from a URL or accept a bare id.
+const ytId = (s) => {
+  const str = String(s || '');
+  const m = str.match(/(?:youtu\.be\/|[?&]v=|embed\/|shorts\/)([A-Za-z0-9_-]{6,})/);
+  if (m) return m[1];
+  return /^[A-Za-z0-9_-]{6,}$/.test(str) ? str : null;
+};
+
+// Turn a single line into a video/placeholder block if it qualifies. Authors write videos
+// by dropping a YouTube link (or `@video <id|url>`) on its own line — often inside the
+// "Watch" bullet. Leftover `[Placeholder …]` notes render as a tasteful "coming soon" card.
+function videoBlockFor(line) {
+  if (/\[placeholder/i.test(line)) {
+    const q = line.match(/"([^"]+)"|[\u201C]([^\u201D]+)[\u201D]/);
+    return { t: 'videosoon', title: (q && (q[1] || q[2])) || null };
+  }
+  const s0 = line
+    .replace(/^\s*[-*]\s+/, '')                          // list bullet
+    .replace(/^[\u25B6\u25BA\u25B7\uFE0F\u2018\u2019\s►▶️🎬📺]+/gu, '') // leading play glyphs
+    .replace(/^watch[:\-\s]*/i, '')                       // a "Watch:" label
+    .trim();
+  const mark = s0.match(/^@video\s+(\S+)$/i);
+  const linkOnly = s0.match(/^(?:\[[^\]]*\]\()?\s*(https?:\/\/[^\s)]+)\)?$/);
+  let id = null;
+  if (mark) id = ytId(mark[1]);
+  else if (linkOnly && /(youtube\.com|youtu\.be)/i.test(linkOnly[1])) id = ytId(linkOnly[1]);
+  return id ? { t: 'video', id } : null;
+}
+
 function parseBlocks(md) {
   const lines = (md || '').split('\n');
   const blocks = []; let i = 0;
   while (i < lines.length) {
     const line = lines[i];
     if (/^\s*$/.test(line)) { i++; continue; }
+    const vb = videoBlockFor(line);
+    if (vb) { blocks.push(vb); i++; continue; }
     if (line.startsWith('### ')) { blocks.push({ t: 'h3', x: line.slice(4) }); i++; continue; }
     if (line.startsWith('## ')) { blocks.push({ t: 'h2', x: line.slice(3) }); i++; continue; }
     if (line.startsWith('# ')) { blocks.push({ t: 'h1', x: line.slice(2) }); i++; continue; }
@@ -20,8 +51,8 @@ function parseBlocks(md) {
       blocks.push({ t: 'quote', items: q.filter((s) => s.trim()) }); continue;
     }
     if (/^\s*-\s+/.test(line)) {
-      const items = []; while (i < lines.length && /^\s*-\s+/.test(lines[i])) { items.push(lines[i].replace(/^\s*-\s+/, '')); i++; }
-      blocks.push({ t: 'ul', items }); continue;
+      const items = []; while (i < lines.length && /^\s*-\s+/.test(lines[i]) && !videoBlockFor(lines[i])) { items.push(lines[i].replace(/^\s*-\s+/, '')); i++; }
+      if (items.length) { blocks.push({ t: 'ul', items }); continue; }
     }
     if (/^\s*\d+\.\s+/.test(line)) {
       const items = []; while (i < lines.length && /^\s*\d+\.\s+/.test(lines[i])) { items.push(lines[i].replace(/^\s*\d+\.\s+/, '')); i++; }
@@ -57,12 +88,36 @@ function inline(text, ctx, kp) {
   return nodes;
 }
 
+function VideoEmbed({ id }) {
+  return (
+    <div className="lp-md-video">
+      <div className="cp-video">
+        <iframe
+          src={`https://www.youtube.com/embed/${id}`}
+          title="Lesson video"
+          loading="lazy"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowFullScreen
+          referrerPolicy="strict-origin-when-cross-origin"
+        />
+      </div>
+    </div>
+  );
+}
+
 function block(b, i, ctx) {
   const kp = 'k' + i + '-';
   if (b.t === 'h1') return <h1 key={i}>{inline(b.x, ctx, kp)}</h1>;
   if (b.t === 'h2') return <h2 key={i} className={isMode(b.x) ? 'mode' : ''}>{inline(b.x, ctx, kp)}</h2>;
   if (b.t === 'h3') return <h3 key={i}>{inline(b.x, ctx, kp)}</h3>;
   if (b.t === 'hr') return <hr key={i} />;
+  if (b.t === 'video') return <VideoEmbed key={i} id={b.id} />;
+  if (b.t === 'videosoon') return (
+    <div key={i} className="lp-md-soon">
+      <span className="ic">🎬</span>
+      <span>Walkthrough video coming soon{b.title ? <> — <em>“{b.title}”</em></> : null}</span>
+    </div>
+  );
   if (b.t === 'p') return <p key={i}>{inline(b.x, ctx, kp)}</p>;
   if (b.t === 'ul') return <ul key={i}>{b.items.map((it, j) => <li key={j}>{inline(it, ctx, kp + j)}</li>)}</ul>;
   if (b.t === 'ol') return <ol key={i}>{b.items.map((it, j) => <li key={j}>{inline(it, ctx, kp + j)}</li>)}</ol>;
