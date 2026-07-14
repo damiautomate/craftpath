@@ -49,11 +49,21 @@ export async function POST(req) {
     // 3) SKILL MANIFESTS (build the journey) — done last so lessons already exist
     for (const f of files.filter((x) => /skill\.ya?ml$/i.test(x.base))) {
       try {
-        const { skill, phases } = parseManifest(f.content);
+        const { skill, tracks, phases } = parseManifest(f.content);
         const { data: skillRow, error } = await sb.from('skills')
-          .upsert({ slug: skill.slug, title: skill.title, tagline: skill.tagline, goal: skill.goal }, { onConflict: 'slug' })
+          .upsert({
+            slug: skill.slug, title: skill.title, tagline: skill.tagline, goal: skill.goal,
+            track_label: skill.track_label, track_choice_phase: skill.track_choice_phase,
+          }, { onConflict: 'slug' })
           .select().single();
         if (error) throw new Error(error.message);
+
+        await sb.from('skill_tracks').delete().eq('skill_id', skillRow.id);
+        if (tracks.length) {
+          const { error: tErr } = await sb.from('skill_tracks').insert(tracks.map((t) => ({ skill_id: skillRow.id, track: t.track, label: t.label, blurb: t.blurb, sort: t.sort })));
+          if (tErr) throw new Error(tErr.message);
+        }
+
         await sb.from('phases').delete().eq('skill_id', skillRow.id);
         let mods = 0;
         for (const ph of phases) {
@@ -62,12 +72,12 @@ export async function POST(req) {
             .select().single();
           if (pErr) throw new Error(pErr.message);
           if (ph.modules.length) {
-            const { error: mErr } = await sb.from('phase_modules').insert(ph.modules.map((m) => ({ phase_id: phaseRow.id, lesson_code: m.lesson_code, layer: m.layer, sort: m.sort })));
+            const { error: mErr } = await sb.from('phase_modules').insert(ph.modules.map((m) => ({ phase_id: phaseRow.id, lesson_code: m.lesson_code, layer: m.layer, track: m.track, sort: m.sort })));
             if (mErr) throw new Error(mErr.message);
             mods += ph.modules.length;
           }
         }
-        summary.skills.push({ slug: skill.slug, title: skill.title, phases: phases.length, modules: mods });
+        summary.skills.push({ slug: skill.slug, title: skill.title, tracks: tracks.length, phases: phases.length, modules: mods });
       } catch (e) { summary.skills.push({ error: e.message }); }
     }
 

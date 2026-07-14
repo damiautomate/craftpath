@@ -1,0 +1,167 @@
+--- # skill.yaml — manifest for skill 1.3.6 (read by the app; lessons live as referenced .md files)
+
+id: "1.3.6"
+slug: "crm-implementation"
+title: "CRM Implementation & Customization"
+parent: "1.3 Software & Development"
+related_skills: ["1.3.5 Automation & Integration", "1.3.7 API Integration & Backend"]
+summary: >
+  Take someone from zero to a paid CRM implementation freelancer. The TRUNK teaches the
+  platform-agnostic craft (discovery → data model → automation → migration → integration →
+  adoption → delivery → the business of it); each BRANCH teaches one platform's hands.
+goal: "Finish the path → land and deliver paying CRM clients, then scale to recurring income."
+
+# ---- specialization tracks (platform choice) ----------------------------
+track_label: "platform"          # what a track is called to students
+track_choice_phase: 1            # Phase 0 is neutral; from Phase 1 a platform is required
+
+# Only platforms listed here are choosable (so a half-built track never shows empty).
+# Add a platform when its lessons exist: one line here + its {track: <id>} modules below.
+tracks:
+  - {id: "ghl", label: "GoHighLevel", blurb: "All-in-one CRM + marketing for agencies & service businesses"}
+  # - {id: "zoho",    label: "Zoho CRM", blurb: "Flexible all-in-one CRM for SMBs"}
+  # - {id: "hubspot", label: "HubSpot",  blurb: "Popular all-in-one CRM & marketing"}
+version: "0.1"
+last_reviewed: "2026-06-30"
+review_due: "2026-12-30"
+maturity: "experimental"
+
+# ---- the structure model -------------------------------------------------
+model:
+  trunk: "platform-agnostic CRM implementation craft"
+  branches: "one self-contained track per platform; mirror trunk concepts + carry a self-contained primer"
+  weave_rule: "craft / business / foundation are separate modules sequenced together, never blended"
+  pairing_rule: "learner does concept (trunk) then execution (branch) paired, module by module"
+
+# ---- delivery model (how lessons are taught) -----------------------------
+delivery_model:
+  trunk: "TEXT-DOMINANT — the discipline is stable theory; deep written lessons are the core, with video/practice/reflect layered on where useful"
+  branches: "VIDEO-PRIMARY — you cannot learn where-to-click from prose; platform lessons lead with video (screen-share walkthroughs)"
+  video_hosting: "videos play INSIDE our platform (not sending users out) — via embedded YouTube (curated, high-quality) or API integration with other video sources; mechanism TBD when branches are built"
+  rule: "video always complements written depth in the trunk; in branches, video carries the hands-on demonstration while text provides reference + context"
+  staleness: "branch (platform-specific) content carries shorter review_due windows because tool UIs/pricing/AI features change fast; trunk content is far more stable"
+
+# ---- platform branches (build later; trunk first) ------------------------
+branches:
+  - {platform: "Zoho CRM",            segment: "all-in-one SMB",     status: "planned", priority: 1}
+  - {platform: "HubSpot",             segment: "all-in-one SMB",     status: "planned", priority: 2}
+  - {platform: "GoHighLevel",         segment: "agency/service",     status: "planned", priority: 3}
+  - {platform: "Salesforce",          segment: "enterprise",         status: "planned", priority: 4}
+  - {platform: "Pipedrive",           segment: "sales-focused",      status: "planned"}
+  - {platform: "Microsoft Dynamics 365", segment: "enterprise",      status: "planned"}
+  - {platform: "monday CRM",          segment: "work-OS",            status: "planned"}
+  - {platform: "Freshsales",          segment: "all-in-one SMB",     status: "planned"}
+  - {platform: "Keap / ActiveCampaign", segment: "agency/marketing", status: "planned"}
+  - {platform: "Vertical CRMs (Veeva, Follow Up Boss, etc.)", segment: "vertical", status: "on-demand"}
+
+# ---- shared library references (authored once elsewhere) -----------------
+shared_refs:
+  business: "../../shared/business/"          # Pathway Stages 0–10
+  foundations: "../../shared/foundations/"     # mindset, sales-for-self, etc. (professional skills woven THROUGH)
+  integration_automation: "../../shared/integration-automation/"  # overlap with related skills
+  glossary: "../../shared/glossary.yaml"       # auto-linked term popovers (beginner Layer 1)
+  primers: "../../shared/primers/"             # beginner concept on-ramps (beginner Layer 2)
+
+# ---- prerequisites & beginner on-ramp ------------------------------------
+# Three layers close the "beginner doesn't understand the terms" gap:
+#   Layer 1 = glossary (auto-linked word popovers)   → shared_refs.glossary
+#   Layer 2 = primers (short concept on-ramps)       → listed below
+#   Layer 3 = prerequisite graph (skills/concepts)   → prerequisite_skills + per-module requires_concepts/assumes
+# NOTE: primers are BEGINNER on-ramps that sit UNDER the journey; foundations are PROFESSIONAL skills woven THROUGH it. Different shelves, same mechanism.
+prerequisite_skills: []        # whole skills required before this one (none for CRM)
+onramp:
+  recommended_primers: ["P1 — Sales & Marketing Basics", "P2 — Data Basics"]
+  gate: "soft"                 # recommend + one-tap start; do NOT hard-block
+  self_select: "Offer 'New here? Start with the primers' vs 'Already know this? Skip ahead' at skill start"
+  note: "A true beginner should take P1 + P2 first; experienced learners can skip. Hard-gate only genuine requirements."
+
+# ---- gate rule (applies to EVERY phase) ----
+# A phase is only complete when ALL of its deliverables are done — the craft work
+# AND the woven foundation/business deliverables (e.g., the Mindset commitments).
+# Foundation/business tasks are REQUIRED, never optional.
+gate_rule: "Every gate requires the phase's craft deliverables PLUS its foundation/business deliverables. All mandatory to advance."
+
+# ---- the curriculum: 6 phases, each with craft modules + woven layers + a gate ----
+phases:
+
+  - phase: 0
+    name: "Orient & Commit"
+    goal: "Understand the work, pick platform + niche, and commit."
+    modules:
+      - {id: "T0.1", title: "What CRM really is & why businesses pay for it", layer: craft, mode: learn,  status: draft, file: "trunk/lessons/T0.1-what-crm-is.md"}
+      - {id: "T0.2", title: "The CRM landscape & the implementer's role",     layer: craft, mode: learn,  status: draft, file: "trunk/lessons/T0.2-landscape-and-role.md"}
+      - {id: "T0.3", title: "AI in modern CRM (orientation)",                 layer: craft, mode: learn,  status: draft, file: "trunk/lessons/T0.3-ai-in-crm.md"}
+      - {id: "T0.4", title: "Choose your platform + niche",                   layer: craft, mode: apply,  status: draft, file: "trunk/lessons/T0.4-choose-platform-and-niche.md"}
+      - {id: "F0.1", title: "Mindset & commitment",                           layer: foundation, mode: reflect, status: draft, shared: true, file: "../../shared/foundations/F0.1-mindset-and-commitment.md"}
+      - {id: "B0.1", title: "The freelance business: how it works & committing (Pathway St.0–1)", layer: business, mode: "learn+apply", status: draft, shared: true, file: "../../shared/business/B0.1-commit-and-choose.md"}
+    gate: "REQUIRED — all of: platform chosen (with a practice environment) + niche + written positioning line; AND your why, income goal + date, weekly study hours, and a tracker set up."
+
+  - phase: 1
+    name: "Craft Foundations — the thinking"
+    goal: "Think like an implementer before deep tooling."
+    modules:
+      - {id: "T1.1", title: "Discovery & requirements gathering", layer: craft, mode: "learn+practice", status: draft, file: "trunk/lessons/T1.1-discovery-and-requirements.md"}
+      - {id: "T1.2", title: "Process mapping & design",           layer: craft, mode: "learn+practice", status: draft, file: "trunk/lessons/T1.2-process-mapping.md"}
+      - {id: "T1.3", title: "CRM anatomy & data modeling",        layer: craft, mode: "learn+practice", status: draft, file: "trunk/lessons/T1.3-data-modeling.md"}
+      - {id: "F1.1", title: "Learning-how-to-learn & consistency systems", layer: foundation, mode: "learn+apply", status: draft, shared: true, file: "../../shared/foundations/F1.1-learning-and-consistency.md"}
+    gate: "REQUIRED — all of: a completed requirements document (real or sample business) + that business mapped into a CRM data model; AND your learning/consistency system in place."
+
+  - phase: 2
+    name: "Hireable + Proof — the doing"
+    goal: "Real competence across the full build lifecycle + portfolio-grade proof."
+    modules:
+      - {id: "T2.1", title: "Configuration vs customization",          layer: craft, mode: "learn+practice", status: draft, file: "trunk/lessons/T2.1-configuration-vs-customization.md"}
+      - {id: "T2.1-ghl", title: "Build your configuration in GoHighLevel", layer: craft, track: ghl, mode: build, status: complete, file: "branches/ghl/lessons/T2.1-ghl.md"}
+      - {id: "T2.2", title: "Automation & workflow logic",             layer: craft, mode: "learn+practice", status: draft, file: "trunk/lessons/T2.2-automation.md"}
+      - {id: "T2.3", title: "Data management & migration",             layer: craft, mode: "learn+practice", status: draft, file: "trunk/lessons/T2.3-data-management-migration.md"}
+      - {id: "T2.4", title: "Reporting, dashboards & analytics",       layer: craft, mode: "learn+practice", status: draft, file: "trunk/lessons/T2.4-reporting-dashboards.md"}
+      - {id: "T2.5", title: "Security, access & governance basics",    layer: craft, mode: "learn+practice", status: draft, file: "trunk/lessons/T2.5-security-access.md"}
+      - {id: "T2.6", title: "Integrations: connecting the CRM",        layer: craft, mode: "learn+practice", status: draft, file: "trunk/lessons/T2.6-integrations.md", handoff: ["1.3.5", "1.3.7"]}
+      - {id: "T2.7", title: "Testing, QA & go-live readiness",         layer: craft, mode: "learn+practice", status: draft, file: "trunk/lessons/T2.7-testing-go-live.md"}
+      - {id: "T2.8", title: "CAPSTONE: real client project (design here + build in platform track)", layer: craft, mode: "practice+apply", status: draft, file: "trunk/lessons/T2.8-capstone.md"}
+      - {id: "B2.1", title: "Build proof & case study (Pathway St.2–3)", layer: business, mode: "learn+apply", status: draft, shared: true, file: "../../shared/business/B2.1-build-proof-case-study.md"}
+      - {id: "F2.1", title: "Deep work & first personal-brand footprint", layer: foundation, mode: "learn+apply", status: draft, shared: true, file: "../../shared/foundations/F2.1-deep-work-personal-brand.md"}
+    gate: "A complete documented sample implementation + 1 case study + positioning line."
+
+  - phase: 3
+    name: "Go to Market — turn the skill into clients"
+    goal: "Package, get visible, start conversations."
+    modules:
+      - {id: "T3.1", title: "User adoption, training & change management", layer: craft, mode: "learn+apply", status: draft, file: "trunk/lessons/T3.1-adoption-training-change.md"}
+      - {id: "T3.2", title: "Governance, maintenance & handover",          layer: craft, mode: learn, status: draft, file: "trunk/lessons/T3.2-governance-maintenance-handover.md"}
+      - {id: "T3.3", title: "The CRM freelance business",                   layer: craft, mode: "learn+apply", status: draft, file: "trunk/lessons/T3.3-crm-freelance-business.md"}
+      - {id: "B3.1", title: "Package, set up shop & get clients (Pathway St.4–6)", layer: business, mode: "learn+apply", status: draft, shared: true, file: "../../shared/business/B3.1-package-setup-get-clients.md"}
+      - {id: "F3.1", title: "Marketing-for-self, personal brand & comms",   layer: foundation, mode: "learn+apply", status: draft, shared: true, file: "../../shared/foundations/F3.1-marketing-personal-brand-communication.md"}
+      - {id: "F3.2", title: "Client communication in writing (messaging, chat & platforms)", layer: foundation, mode: "learn+apply", status: draft, shared: true, file: "../../shared/foundations/F3.2-client-communication-writing.md"}
+    gate: "Live profiles + a productized offer + outreach running + first leads/discovery calls."
+
+  - phase: 4
+    name: "Win & Deliver — first real money"
+    goal: "Land and deliver a paying client."
+    modules:
+      - {id: "T4.1", title: "The client discovery call",            layer: craft, mode: apply, status: draft, file: "trunk/lessons/T4.1-client-discovery-call.md"}
+      - {id: "T4.2", title: "Proposal, SOW & closing",             layer: craft, mode: apply, status: draft, file: "trunk/lessons/T4.2-proposal-sow-closing.md"}
+      - {id: "T4.3", title: "Delivering a real implementation",     layer: craft, mode: apply, status: draft, file: "trunk/lessons/T4.3-delivering-implementation.md"}
+      - {id: "T4.4", title: "Handover, training & the testimonial", layer: craft, mode: "apply+reflect", status: draft, file: "trunk/lessons/T4.4-handover-testimonial.md"}
+      - {id: "B4.1", title: "Win & deliver (Pathway St.7–8)",       layer: business, mode: "learn+apply", status: draft, shared: true, file: "../../shared/business/B4.1-win-deliver.md"}
+      - {id: "F4.1", title: "Sales, negotiation & client management", layer: foundation, mode: "learn+apply", status: draft, shared: true, file: "../../shared/foundations/F4.1-sales-negotiation-client-management.md"}
+    gate: "FIRST PAYING CLIENT delivered + testimonial collected."
+
+  - phase: 5
+    name: "Retain & Scale — massively"
+    goal: "Move past the first client to recurring income and leverage."
+    modules:
+      - {id: "T5.1", title: "Retainers & ongoing CRM management",    layer: craft, mode: "learn+apply", status: draft, file: "trunk/lessons/T5.1-retainers-ongoing-management.md"}
+      - {id: "T5.2", title: "Optimization & continuous improvement", layer: craft, mode: "learn+apply", status: draft, file: "trunk/lessons/T5.2-optimization-improvement.md"}
+      - {id: "T5.3", title: "Advanced & AI-in-CRM in practice",      layer: craft, mode: "learn+practice", status: draft, file: "trunk/lessons/T5.3-advanced-ai-in-practice.md", note: "fast-moving — refresh often"}
+      - {id: "T5.4", title: "Scale past your hours",                 layer: craft, mode: "learn+reflect", status: draft, file: "trunk/lessons/T5.4-scale-past-hours.md"}
+      - {id: "B5.1", title: "Retain & scale (Pathway St.9–10)",      layer: business, mode: "learn+apply", status: draft, shared: true, file: "../../shared/business/B5.1-retain-scale.md"}
+      - {id: "F5.1", title: "Financial literacy & systems/SOPs",     layer: foundation, mode: "learn+apply", status: draft, shared: true, file: "../../shared/foundations/F5.1-financial-literacy-systems.md"}
+    gate: "Repeat/retainer income + a written scale plan."
+
+# ---- modes legend (for the app's renderer) -------------------------------
+modes:
+  learn:   "input — concept lesson, curated resource path, guided walkthrough"
+  practice: "reps — drills, project/build briefs (each project = a portfolio asset), AI feedback"
+  apply:   "real-world — action tasks, templates & tools, milestone challenge"
+  reflect: "verify — reflection prompts, self-check rubrics, peer/mentor critique (future)"

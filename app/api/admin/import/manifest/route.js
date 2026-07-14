@@ -9,13 +9,23 @@ export async function POST(req) {
 
   try {
     const { content } = await req.json();
-    const { skill, phases } = parseManifest(content);
+    const { skill, tracks, phases } = parseManifest(content);
     const sb = createAdminClient();
 
     const { data: skillRow, error: sErr } = await sb.from('skills')
-      .upsert({ slug: skill.slug, title: skill.title, tagline: skill.tagline, goal: skill.goal }, { onConflict: 'slug' })
+      .upsert({
+        slug: skill.slug, title: skill.title, tagline: skill.tagline, goal: skill.goal,
+        track_label: skill.track_label, track_choice_phase: skill.track_choice_phase,
+      }, { onConflict: 'slug' })
       .select().single();
     if (sErr) throw new Error(sErr.message);
+
+    // selectable tracks (clean re-sync)
+    await sb.from('skill_tracks').delete().eq('skill_id', skillRow.id);
+    if (tracks.length) {
+      const { error: tErr } = await sb.from('skill_tracks').insert(tracks.map((t) => ({ skill_id: skillRow.id, track: t.track, label: t.label, blurb: t.blurb, sort: t.sort })));
+      if (tErr) throw new Error(tErr.message);
+    }
 
     // clean re-import: remove old phases (cascades to phase_modules)
     await sb.from('phases').delete().eq('skill_id', skillRow.id);
@@ -27,13 +37,13 @@ export async function POST(req) {
         .select().single();
       if (pErr) throw new Error(pErr.message);
       if (ph.modules.length) {
-        const mods = ph.modules.map((m) => ({ phase_id: phaseRow.id, lesson_code: m.lesson_code, layer: m.layer, sort: m.sort }));
+        const mods = ph.modules.map((m) => ({ phase_id: phaseRow.id, lesson_code: m.lesson_code, layer: m.layer, track: m.track, sort: m.sort }));
         const { error: mErr } = await sb.from('phase_modules').insert(mods);
         if (mErr) throw new Error(mErr.message);
         modCount += mods.length;
       }
     }
-    return NextResponse.json({ ok: true, skill: skill.slug, title: skill.title, phases: phases.length, modules: modCount });
+    return NextResponse.json({ ok: true, skill: skill.slug, title: skill.title, tracks: tracks.length, phases: phases.length, modules: modCount });
   } catch (e) {
     return NextResponse.json({ error: e.message }, { status: 400 });
   }

@@ -1,39 +1,50 @@
 import { redirect, notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getUser, getProfile } from '@/lib/auth';
-import { getSkillJourney, getGlossaryMap, getUserProgress, getUserDeliverables, getBranches } from '@/lib/content';
+import {
+  getSkill, getSkillJourney, getSkillTracks, getEnrollment,
+  getGlossaryMap, getUserProgress, getUserDeliverables, getUserWorkMeta,
+} from '@/lib/content';
 import StudentApp from './StudentApp';
 
 export default async function SkillJourney({ params }) {
   const user = await getUser();
   if (!user) redirect('/login?next=/learn/' + params.slug);
   const sb = createClient();
-  const journey = await getSkillJourney(sb, params.slug);
-  if (!journey) notFound();
+
+  const skill = await getSkill(sb, params.slug);
+  if (!skill) notFound();
+
+  // Which platform this student is on (null until they choose) → the journey is sliced to it.
+  const track = await getEnrollment(sb, user.id, skill.id);
+
   const profile = await getProfile();
-
-  // The pilot runs one platform track. `branch_platform` can later come from the
-  // skill manifest; until then it defaults to 'ghl'. Adding a second track is when
-  // a platform picker gets built.
-  const platform = journey.skill.branch_platform || 'ghl';
-
-  const [glossary, completed, work, branches] = await Promise.all([
+  const [journey, tracks, glossary, completed, work, workMeta] = await Promise.all([
+    getSkillJourney(sb, params.slug, track),
+    getSkillTracks(sb, skill.id),
     getGlossaryMap(sb),
     getUserProgress(sb, user.id),
     getUserDeliverables(sb, user.id),
-    getBranches(sb, platform),
+    getUserWorkMeta(sb, user.id),
   ]);
+  if (!journey) notFound();
+
   return (
     <StudentApp
       userId={user.id}
+      skillId={skill.id}
       name={profile?.display_name || (user.email || '').split('@')[0]}
       isAdmin={!!profile?.is_admin}
       skill={journey.skill}
       phases={journey.phases}
       glossary={glossary}
-      branches={branches}
+      tracks={tracks}
+      chosenTrack={track}
+      trackLabel={skill.track_label || 'platform'}
+      trackChoicePhase={skill.track_choice_phase ?? 1}
       initialCompleted={completed}
       initialWork={work}
+      workMeta={workMeta}
     />
   );
 }
